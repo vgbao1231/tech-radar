@@ -1,0 +1,23 @@
+# --- Node / TypeScript ---
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# --- Local database (PGlite dev data) ---
+.data/
+
+# --- Env (không commit secret) ---
+.env
+.env.local
+.env.*.local
+
+# --- Logs ---
+*.log
+logs/
+
+# --- OS / Editor ---
+.DS_Store
+.idea/
+.vscode/

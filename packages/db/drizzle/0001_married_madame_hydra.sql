@@ -1,0 +1,1 @@
+ALTER TYPE "public"."review_method" ADD VALUE 'sku_match' BEFORE 'brand_model_match';

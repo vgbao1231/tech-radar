@@ -1,0 +1,39 @@
+{
+  "source": "gearvn",
+  "base_url": "https://gearvn.com",
+  "fetched_at": "2026-11-01",
+  "user_agent": "TechRadarBot/0.1 (personal research; contact: owner@example.invalid)",
+  "note": "Phase 1 small-scale POC. Public pages only, low frequency, no bypass. Raw HTML saved for offline parsing tests. Do not regenerate without intent.",
+  "fixtures": [
+    {
+      "file": "ban-phim-co.html",
+      "url": "https://gearvn.com/collections/ban-phim-co",
+      "type": "category",
+      "http_status": 200,
+      "bytes": 535413,
+      "notes": "Mechanical keyboard category. Server-rendered; product cards contain title, price-sale, specs, /products/slug."
+    },
+    {
+      "file": "gaming-mouse.html",
+      "url": "https://gearvn.com/collections/gaming-mouse",
+      "type": "category",
+      "http_status": 200,
+      "bytes": 452317,
+      "notes": "Gaming mouse category. Same card structure as keyboard category."
+    },
+    {
+      "file": "product-azoth-96-he-white.html",
+      "url": "https://gearvn.com/products/ban-phim-gaming-asus-rog-azoth-96-he-white",
+      "type": "product",
+      "http_status": 200,
+      "bytes": 356538,
+      "notes": "Product detail. JSON-LD Product: name, sku, brand, offers(price/availability/seller), additionalProperty (specs). mpn absent."
+    },
+    {
+      "file": "extracted-sample.json",
+      "url": "(derived)",
+      "type": "derived-sample",
+      "notes": "First 10 listings per category extracted by stdlib parser. Evidence of parse feasibility; not a full dataset."
+    }
+  ]
+}

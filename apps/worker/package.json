@@ -1,0 +1,22 @@
+{
+  "name": "@tech-radar/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "dev": "tsx watch src/cli.ts",
+    "start": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@tech-radar/core": "workspace:*",
+    "@tech-radar/db": "workspace:*",
+    "@tech-radar/sources": "workspace:*",
+    "drizzle-orm": "^0.45.4",
+    "pino": "^9.5.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}
