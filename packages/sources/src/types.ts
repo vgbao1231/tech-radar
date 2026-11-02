@@ -16,6 +16,7 @@ export interface ScrapedListing {
   priceOriginal: number | null;
   currency: string;
   stockStatus: string | null;
+  imageUrl: string | null;
   specs: Record<string, string>;
   /** Raw structured data kept for provenance (JSON-LD payload, card text, ...). */
   rawPayload: unknown;

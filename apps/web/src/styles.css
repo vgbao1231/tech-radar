@@ -1,3 +1,20 @@
+
+
+[data-theme="dark"] {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --border: #2a2f40;
+  --text: #e6e8f0;
+  --muted: #9aa3bf;
+  --accent: #6b8cff;
+  --accent-soft: #1f2a4a;
+  --ok: #3dd68c;
+  --ok-soft: #14332a;
+  --warn: #ff6b6b;
+  --warn-soft: #3a1f1f;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
 :root {
   --bg: #f6f7fb;
   --surface: #ffffff;

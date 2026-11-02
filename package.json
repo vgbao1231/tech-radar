@@ -10,12 +10,16 @@
   "scripts": {
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
+    "build": "pnpm --filter @tech-radar/web build",
     "db:generate": "pnpm --filter @tech-radar/db db:generate",
     "db:migrate": "pnpm --filter @tech-radar/db db:migrate",
     "db:seed": "pnpm --filter @tech-radar/db db:seed",
     "dev:api": "pnpm --filter @tech-radar/api dev",
     "dev:web": "pnpm --filter @tech-radar/web dev",
-    "dev:worker": "pnpm --filter @tech-radar/worker dev"
+    "dev:worker": "pnpm --filter @tech-radar/worker dev",
+    "dev": "pnpm dev:api & pnpm dev:web & wait",
+    "db:setup": "pnpm db:migrate && pnpm db:seed",
+    "dev:full": "pnpm db:setup && pnpm dev"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

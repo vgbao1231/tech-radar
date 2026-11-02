@@ -6,6 +6,7 @@ import type { SourceInfo } from "../lib/types.js";
 export function SourcesPage() {
   const [items, setItems] = useState<SourceInfo[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -21,6 +22,18 @@ export function SourcesPage() {
       cancelled = true;
     };
   }, []);
+
+  const trigger = async (code: string) => {
+    setBusy(code);
+    try {
+      await api.triggerRun(code);
+      alert("Đã chạy thu thập cho " + code);
+    } catch (cause) {
+      setError((cause as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
 
   if (error) return <p className="alert">{error}</p>;
 
@@ -68,6 +81,11 @@ export function SourcesPage() {
               )}
             </p>
             <p className="muted small">Khảo sát: {formatDate(source.investigatedAt)}</p>
+            {source.status === "approved_for_use" && (
+              <button type="button" className="btn btn--primary" disabled={busy === source.code} onClick={() => trigger(source.code)}>
+                {busy === source.code ? "Đang chạy..." : "Chạy thu thập"}
+              </button>
+            )}
           </article>
         ))}
       </div>

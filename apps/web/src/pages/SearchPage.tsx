@@ -14,6 +14,7 @@ export function SearchPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
+  const [crawling, setCrawling] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,6 +41,21 @@ export function SearchPage() {
       clearTimeout(timer);
     };
   }, [query, category]);
+
+  const crawlAll = async () => {
+    setCrawling(true);
+    try {
+      await api.triggerRun("all");
+      // reload
+      const response = await api.products({ q: query.trim() || undefined, category: category || undefined });
+      setItems(response.items);
+      setTotal(response.total);
+    } catch (cause) {
+      setError((cause as Error).message);
+    } finally {
+      setCrawling(false);
+    }
+  };
 
   const toggle = (id: string) => {
     setSelected((current) =>
@@ -68,6 +84,9 @@ export function SearchPage() {
           <option value="gaming_mouse">Chuột gaming</option>
         </select>
         <span className="muted">{loading ? "Đang tải…" : `${total} sản phẩm`}</span>
+        <button type="button" className="btn btn--primary" disabled={crawling} onClick={crawlAll}>
+          {crawling ? "Đang thu thập…" : "Thu thập tất cả"}
+        </button>
       </div>
 
       {error && <p className="alert">{error}</p>}
@@ -85,13 +104,29 @@ export function SearchPage() {
                 <span className="badge">{categoryLabel(product.category)}</span>
                 {product.brand && <span className="badge badge--muted">{product.brand}</span>}
               </div>
+              {product.imageUrl && <img className="card__image" src={product.imageUrl} alt={product.name} loading="lazy" />}
               <Link to={`/products/${product.id}`} className="card__title">
                 {product.name}
               </Link>
               <p className="card__price">{formatPrice(product.bestPrice)}</p>
+              {Object.keys(product.specs ?? {}).length > 0 && (
+                <p className="muted small">
+                  {Object.entries(product.specs).slice(0, 3).map(([key, value]) => `${key}: ${value}`).join(" · ")}
+                </p>
+              )}
               <p className="muted small">
-                {product.listings.length} cửa hàng: {product.listings.map((listing) => listing.sourceName).join(", ")}
+                {product.listings.length} cửa hàng:
               </p>
+              <ul className="source-links">
+                {product.listings.map((listing) => (
+                  <li key={listing.id}>
+                    <a href={listing.url} target="_blank" rel="noopener noreferrer">
+                      {listing.sourceName}
+                    </a>
+                    {listing.price !== null && <span> — {formatPrice(listing.price)}</span>}
+                  </li>
+                ))}
+              </ul>
               <label className="check">
                 <input
                   type="checkbox"

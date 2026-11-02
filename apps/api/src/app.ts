@@ -1,8 +1,12 @@
 import Fastify, { type FastifyInstance } from "fastify";
+import pino from "pino";
+import { getAdapter, adapters } from "@tech-radar/sources";
+import { runSource } from "@tech-radar/worker";
 import cors from "@fastify/cors";
 import { and, asc, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import {
   canonicalProducts,
+  dedupeReviews,
   productListings,
   priceHistory,
   scrapeRuns,
@@ -15,6 +19,8 @@ export interface BuildAppOptions {
   /** When set, every /api route except /api/health requires this token. */
   token?: string;
   logger?: boolean;
+  /** Injectable for tests; defaults to the real worker runner. */
+  runSourceImpl?: typeof runSource;
 }
 
 interface ProductQuery {
@@ -72,6 +78,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
         model: canonicalProducts.model,
         category: canonicalProducts.category,
         specs: canonicalProducts.specs,
+        productImageUrl: canonicalProducts.imageUrl,
+        imageUrl: productListings.imageUrl,
         listingId: productListings.id,
         priceCurrent: productListings.priceCurrent,
         priceOriginal: productListings.priceOriginal,
@@ -99,6 +107,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
           model: row.model,
           category: row.category,
           specs: row.specs,
+          imageUrl: row.imageUrl ?? row.productImageUrl,
           listings: [],
           bestPrice: null as number | null,
         };
@@ -114,6 +123,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
         priceOriginal: row.priceOriginal === null ? null : Number(row.priceOriginal),
         stockStatus: row.stockStatus,
         status: row.listingStatus,
+        imageUrl: row.imageUrl,
       });
       if (price !== null && (product.bestPrice === null || price < product.bestPrice)) {
         product.bestPrice = price;
@@ -139,6 +149,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
         priceOriginal: productListings.priceOriginal,
         stockStatus: productListings.stockStatus,
         status: productListings.status,
+        imageUrl: productListings.imageUrl,
         lastSeenAt: productListings.lastSeenAt,
       })
       .from(productListings)
@@ -230,8 +241,16 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     return { items: rows };
   });
 
-  app.get<{ Querystring: { limit?: string } }>("/api/runs", async (request) => {
+  app.get<{ Querystring: { limit?: string; q?: string; source?: string } }>("/api/runs", async (request) => {
     const limit = Math.min(Number(request.query.limit ?? 20) || 20, 100);
+    const q = request.query.q?.trim();
+    const source = request.query.source?.trim();
+    const filters = [
+      source ? eq(sources.code, source) : undefined,
+      q
+        ? or(ilike(sources.code, `%${q}%`), ilike(scrapeRuns.status, `%${q}%`), ilike(scrapeRuns.trigger, `%${q}%`))
+        : undefined,
+    ].filter(Boolean);
     const rows = await db
       .select({
         id: scrapeRuns.id,
@@ -247,6 +266,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
       })
       .from(scrapeRuns)
       .innerJoin(sources, eq(sources.id, scrapeRuns.sourceId))
+      .where(filters.length ? and(...filters) : undefined)
       .orderBy(desc(scrapeRuns.createdAt))
       .limit(limit);
     return { items: rows };
@@ -264,6 +284,80 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
           limit 200`,
     );
     return { items: rows.rows };
+  });
+
+  app.post<{ Params: { id: string } }>("/api/reviews/:id/decision", async (request, reply) => {
+    const { id } = request.params;
+    const body = (request.body ?? {}) as { decision?: string; decidedBy?: string };
+    const decision = body.decision;
+    if (decision !== "accept" && decision !== "reject") {
+      return reply.code(400).send({ error: "invalid_decision" });
+    }
+    const [review] = await db.select().from(dedupeReviews).where(eq(dedupeReviews.id, id));
+    if (!review) return reply.code(404).send({ error: "not_found" });
+    if (review.status !== "pending") return reply.code(409).send({ error: "already_decided" });
+
+    const decidedBy = body.decidedBy ?? "manual";
+    const decidedAt = new Date();
+
+    if (decision === "accept") {
+      if (!review.productId) return reply.code(400).send({ error: "no_target_product" });
+      const listings = await db
+        .select({ id: productListings.id, productId: productListings.productId })
+        .from(productListings)
+        .where(inArray(productListings.id, review.listingIds));
+      const originalIds = [...new Set(listings.map((row) => row.productId).filter(Boolean))] as string[];
+
+      await db.transaction(async (tx) => {
+        await tx
+          .update(productListings)
+          .set({ productId: review.productId, updatedAt: decidedAt })
+          .where(inArray(productListings.id, review.listingIds));
+        await tx
+          .update(dedupeReviews)
+          .set({ status: "merged", decidedBy, decidedAt })
+          .where(eq(dedupeReviews.id, id));
+        for (const originalId of originalIds) {
+          if (originalId !== review.productId) {
+            await tx
+              .update(canonicalProducts)
+              .set({ status: "merged", updatedAt: decidedAt })
+              .where(eq(canonicalProducts.id, originalId));
+          }
+        }
+      });
+    } else {
+      await db
+        .update(dedupeReviews)
+        .set({ status: "rejected", decidedBy, decidedAt })
+        .where(eq(dedupeReviews.id, id));
+    }
+
+    return { ok: true, id, decision };
+  });
+
+  app.post<{ Body: { source?: string; categoryPaths?: string[]; enrichDetails?: boolean } }>("/api/runs/trigger", async (request, reply) => {
+    const sourceCode = request.body?.source ?? "all";
+    const logger = pino({ level: process.env.LOG_LEVEL ?? "info" });
+    const runner = options.runSourceImpl ?? runSource;
+    const codes = sourceCode === "all" ? Object.keys(adapters) : [sourceCode];
+    const results: Awaited<ReturnType<typeof runSource>>[] = [];
+    try {
+      for (const code of codes) {
+        const adapter = getAdapter(code);
+        const result = await runner({
+          db,
+          adapter,
+          categoryPaths: request.body?.categoryPaths,
+          enrichDetails: request.body?.enrichDetails ?? false,
+          logger,
+        });
+        results.push(result);
+      }
+      return sourceCode === "all" ? { items: results } : results[0];
+    } catch (error) {
+      return reply.code(500).send({ error: (error as Error).message });
+    }
   });
 
   return app;

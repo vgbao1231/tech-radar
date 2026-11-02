@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Route, Routes } from "react-router-dom";
 import { getToken, setToken } from "./lib/api.js";
 import { SearchPage } from "./pages/SearchPage.js";
@@ -6,10 +6,16 @@ import { ProductDetailPage } from "./pages/ProductDetailPage.js";
 import { ComparePage } from "./pages/ComparePage.js";
 import { SourcesPage } from "./pages/SourcesPage.js";
 import { RunsPage } from "./pages/RunsPage.js";
+import { ReviewsPage } from "./pages/ReviewsPage.js";
 
 export function App() {
   const [showToken, setShowToken] = useState(false);
   const [token, setTokenState] = useState(getToken());
+  const [dark, setDark] = useState(() => localStorage.getItem("tech-radar-theme") === "dark");
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    localStorage.setItem("tech-radar-theme", dark ? "dark" : "light");
+  }, [dark]);
 
   return (
     <div className="app">
@@ -30,6 +36,10 @@ export function App() {
             <NavLink to="/compare">So sánh</NavLink>
             <NavLink to="/sources">Nguồn dữ liệu</NavLink>
             <NavLink to="/runs">Lần chạy</NavLink>
+            <NavLink to="/reviews">Review</NavLink>
+            <button type="button" className="btn btn--ghost" onClick={() => setDark((v) => !v)}>
+              {dark ? "☀ Sáng" : "🌙 Tối"}
+            </button>
             <button type="button" className="btn btn--ghost" onClick={() => setShowToken((value) => !value)}>
               {token ? "Đã đặt token" : "Token"}
             </button>
@@ -61,6 +71,7 @@ export function App() {
           <Route path="/compare" element={<ComparePage />} />
           <Route path="/sources" element={<SourcesPage />} />
           <Route path="/runs" element={<RunsPage />} />
+          <Route path="/reviews" element={<ReviewsPage />} />
           <Route path="*" element={<p className="empty">Không tìm thấy trang.</p>} />
         </Routes>
       </main>

@@ -43,6 +43,7 @@ function mergeListing(base: ScrapedListing, detail: ScrapedListing): ScrapedList
     priceOriginal: base.priceOriginal ?? detail.priceOriginal,
     stockStatus: detail.stockStatus ?? base.stockStatus,
     specs: { ...base.specs, ...detail.specs },
+    imageUrl: detail.imageUrl ?? base.imageUrl,
     rawPayload: { category: base.rawPayload, product: detail.rawPayload },
   };
 }

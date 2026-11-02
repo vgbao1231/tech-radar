@@ -81,5 +81,6 @@ export async function createDbHandleFromEnv(env: NodeJS.ProcessEnv = process.env
     return createPostgresHandle({ connectionString: url });
   }
   // No DATABASE_URL: fall back to a local, embedded Postgres (dev only).
-  return createPgliteHandle({ dataDir: env.PGLITE_DATA_DIR });
+  // Default to a persisted data dir so migrations/seeds survive across CLI invocations.
+  return createPgliteHandle({ dataDir: env.PGLITE_DATA_DIR || ".data/pglite" });
 }

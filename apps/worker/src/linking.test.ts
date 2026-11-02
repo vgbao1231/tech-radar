@@ -23,6 +23,7 @@ function listing(overrides: Partial<ScrapedListing> & { sourceUrl: string; title
     priceOriginal: null,
     currency: "VND",
     stockStatus: "InStock",
+    imageUrl: null,
     specs: {},
     rawPayload: { kind: "test" },
     ...overrides,

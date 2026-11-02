@@ -14,11 +14,12 @@ const STATUS_LABELS: Record<string, string> = {
 export function RunsPage() {
   const [items, setItems] = useState<ScrapeRunInfo[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [q, setQ] = useState("");
 
   useEffect(() => {
     let cancelled = false;
     api
-      .runs()
+      .runs({ q: q || undefined })
       .then((response) => {
         if (!cancelled) setItems(response.items);
       })
@@ -28,7 +29,7 @@ export function RunsPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [q]);
 
   if (error) return <p className="alert">{error}</p>;
 
@@ -36,6 +37,10 @@ export function RunsPage() {
     <section>
       <h1>Lần chạy thu thập</h1>
       <p className="muted">Mỗi lần chạy ghi lại số listing tìm thấy, số mới, số cập nhật và lỗi (nếu có).</p>
+
+      <div className="toolbar">
+        <input placeholder="Tìm kiếm (nguồn/trạng thái/trigger)" value={q} onChange={(e) => setQ(e.target.value)} />
+      </div>
 
       {items.length === 0 ? (
         <p className="empty">Chưa có lần chạy nào.</p>

@@ -15,6 +15,13 @@
       "when": 1793541019219,
       "tag": "0001_married_madame_hydra",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793556545424,
+      "tag": "0002_awesome_stephen_strange",
+      "breakpoints": true
     }
   ]
 }

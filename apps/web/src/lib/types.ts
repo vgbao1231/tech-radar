@@ -1,5 +1,6 @@
 export interface ListingOffer {
   id: string;
+  imageUrl: string | null;
   source: string;
   sourceName: string;
   url: string;
@@ -16,6 +17,7 @@ export interface ProductSummary {
   model: string | null;
   category: string | null;
   specs: Record<string, string>;
+  imageUrl: string | null;
   listings: ListingOffer[];
   bestPrice: number | null;
 }
@@ -41,6 +43,7 @@ export interface ProductDetail {
     model: string | null;
     category: string | null;
     specs: Record<string, string>;
+    imageUrl: string | null;
   };
   listings: ProductDetailListing[];
 }
@@ -83,4 +86,28 @@ export interface CompareProduct {
     price: number | null;
     stockStatus: string | null;
   }>;
+}
+
+export interface ReviewInfo {
+  id: string;
+  product_id: string | null;
+  listing_ids: string[];
+  method: string;
+  confidence: string;
+  score: string | null;
+  reason: string | null;
+  status: string;
+  created_at: string;
+  candidate_name: string | null;
+  candidate_brand: string | null;
+}
+
+export interface RunTriggerResult {
+  runId: string;
+  status: string;
+  listingsFound: number;
+  listingsNew: number;
+  listingsUpdated: number;
+  historyAppended: number;
+  errors: Array<{ category?: string; message: string }>;
 }

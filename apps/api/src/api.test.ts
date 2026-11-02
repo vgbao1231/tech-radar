@@ -1,9 +1,11 @@
 import type { FastifyInstance } from "fastify";
-import { buildApp } from "./app.js";
+import { buildApp, type BuildAppOptions } from "./app.js";
+import type { RunSourceOptions, RunSourceResult } from "@tech-radar/worker";
 import { createTestDb } from "@tech-radar/db/testing";
 import type { DbHandle } from "@tech-radar/db";
 import {
   canonicalProducts,
+  dedupeReviews,
   priceHistory,
   productListings,
   scrapeRuns,
@@ -199,6 +201,94 @@ describe("operational endpoints", () => {
   it("returns the pending review queue", async () => {
     const body = (await app.inject({ method: "GET", url: "/api/reviews" })).json();
     expect(Array.isArray(body.items)).toBe(true);
+  });
+
+  it("decides a pending review", async () => {
+    const [review] = await handle.db
+      .insert(dedupeReviews)
+      .values({
+        productId: azothId,
+        listingIds: [],
+        method: "name_similarity",
+        confidence: "medium",
+        reason: "test",
+        status: "pending",
+      })
+      .returning({ id: dedupeReviews.id });
+    // create a listing attached to its own canonical to merge
+    const [ownCanonical] = await handle.db
+      .insert(canonicalProducts)
+      .values({ name: "Candidate KB", brand: "ASUS", category: "mechanical_keyboard", status: "active" })
+      .returning({ id: canonicalProducts.id });
+    const [listing] = await handle.db
+      .insert(productListings)
+      .values({
+        productId: ownCanonical!.id,
+        sourceId: (await handle.db.select().from(sources).then((r) => r.find((x) => x.code === "gearvn")!.id)),
+        sourceUrl: "https://gearvn.com/products/candidate-kb",
+        title: "Candidate KB",
+        priceCurrent: "1000.00",
+        stockStatus: "InStock",
+        rawPayload: { kind: "test" },
+      })
+      .returning({ id: productListings.id });
+    await handle.db
+      .update(dedupeReviews)
+      .set({ listingIds: [listing!.id] })
+      .where(eq(dedupeReviews.id, review!.id));
+
+    const accept = await app.inject({
+      method: "POST",
+      url: `/api/reviews/${review!.id}/decision`,
+      payload: { decision: "accept" },
+    });
+    expect(accept.statusCode).toBe(200);
+    const updated = await handle.db.select().from(dedupeReviews).where(eq(dedupeReviews.id, review!.id));
+    expect(updated[0]!.status).toBe("merged");
+    const mergedListing = await handle.db.select().from(productListings).where(eq(productListings.id, listing!.id));
+    expect(mergedListing[0]!.productId).toBe(azothId);
+  });
+
+  it("triggers a scrape run through the injected runner", async () => {
+    const calls: string[] = [];
+    const stubResult: RunSourceResult = {
+      runId: "run-stub",
+      status: "success",
+      listingsFound: 3,
+      listingsNew: 3,
+      listingsUpdated: 0,
+      historyAppended: 3,
+      linked: { attached: 0, created: 3, review: 0, skipped: 0 },
+      errors: [],
+    };
+    const triggered = await buildApp({
+      db: handle.db,
+      runSourceImpl: (async (options: RunSourceOptions) => {
+        calls.push(options.adapter.code);
+        return stubResult;
+      }) as unknown as NonNullable<BuildAppOptions["runSourceImpl"]>,
+    });
+    await triggered.ready();
+
+    const single = await triggered.inject({
+      method: "POST",
+      url: "/api/runs/trigger",
+      payload: { source: "phongvu" },
+    });
+    expect(single.statusCode).toBe(200);
+    expect(single.json()).toMatchObject({ status: "success", listingsFound: 3 });
+    expect(calls).toEqual(["phongvu"]);
+
+    const all = await triggered.inject({
+      method: "POST",
+      url: "/api/runs/trigger",
+      payload: { source: "all" },
+    });
+    expect(all.statusCode).toBe(200);
+    expect(all.json().items).toHaveLength(2);
+    expect(calls).toEqual(["phongvu", "gearvn", "phongvu"]);
+
+    await triggered.close();
   });
 
   it("requires the bearer token when configured", async () => {

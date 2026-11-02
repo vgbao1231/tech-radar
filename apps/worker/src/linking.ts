@@ -81,6 +81,7 @@ export async function linkListing(
     mpn: string | null;
     sku: string | null;
     specs: Record<string, string>;
+    imageUrl?: string | null;
   },
   category: string | null,
   candidates: CanonicalCandidate[],
@@ -114,6 +115,7 @@ export async function linkListing(
       name: listing.title,
       category,
       specs: listing.specs,
+      imageUrl: listing.imageUrl,
       status: "active",
     })
     .returning({ id: canonicalProducts.id });

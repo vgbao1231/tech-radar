@@ -18,5 +18,10 @@
   },
   "devDependencies": {
     "tsx": "^4.19.2"
+  },
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./run": "./src/run.ts"
   }
 }
