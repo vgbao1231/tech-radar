@@ -8,9 +8,9 @@
 ## Vấn đề
 
 - Giá tech gear ở Việt Nam **phân tán** qua nhiều cửa hàng (GEARVN, Phong Vũ, CellphoneS, ...), mỗi nơi một tên/một giá.
-- Giá **thay đổi thường xuyên**; khó biết thời điểm nào rẻ, khó theo dõi xu hướng.
-- Cùng một model có thể xuất hiện với tên hơi khác nhau giữa các cửa hàng → khó nhận ra "cùng một sản phẩm".
-- Không có nơi gom chuẩn theo **model** để so sánh giá nhiều nơi + xem lịch sử.
+- Cùng một sản phẩm có thể xuất hiện ở nhiều nguồn với tên hơi khác nhau → trùng lặp, khó theo dõi.
+- Người dùng phải lướt nhiều nơi, dễ bỏ sót và mất thời gian.
+- Mục tiêu: gom các tech gear từ nhiều nguồn, khử trùng, hiển thị thống nhất (tên, giá, hình, thông số) kèm nguồn + link gốc.
 
 ## Use cases
 

@@ -42,11 +42,18 @@
 
 ## Phase 6 — Cập nhật thủ công, worker status, retry, logging, lịch sử giá
 - **Mục tiêu:** hoàn thiện vận hành: trigger thủ công, xem trạng thái run, retry/backoff, log tìm kiếm được, chính sách lưu giữ lịch sử giá.
-- **Trạng thái:** **SẴN SÀNG THỰC HIỆN / ĐANG TIẾP TỤC**.
+- **Trạng thái:** **HOÀN THÀNH (trừ retention — owner tạm hoãn)**.
+  - `POST /api/runs/trigger` cho phép chạy một nguồn hoặc tất cả từ UI; CLI hỗ trợ `--all` và `--loop` (chu kỳ theo `WORKER_INTERVAL_MS`, mặc định 6h).
+  - UI: nút "Chạy thu thập" ở trang Nguồn và trang Tìm kiếm, trang review gộp/từ chối thủ công, tìm kiếm trong lịch sử runs, theme sáng/tối.
+  - Logging qua pino; lỗi từng category được ghi vào `scrape_runs.errors` thay vì làm hỏng cả run.
+  - Chính sách lưu trữ/xóa lịch sử giá: **chưa làm** (owner hoãn).
 
 ## Phase 7 — Thêm nguồn đã vượt feasibility
 - **Mục tiêu:** thêm Phong Vũ, CellphoneS (chỉ khi đã qua feasibility + duyệt ToS) và nguồn khác.
-- **Trạng thái:** Chưa thực hiện (Phong Vũ đang `blocked`, CellphoneS đang `investigated`).
+- **Trạng thái:** **ĐANG THỰC HIỆN**.
+  - **Phong Vũ: HOÀN THÀNH.** Feasibility + POC 2026-11-02 (3 request, ≥2s/req), fixture lưu tại `tests/fixtures/sources/phongvu/`, adapter `phongvuAdapter` (Next.js `__NEXT_DATA__` + JSON-LD), 8 parser tests + 1 integration test offline.
+  - **Live run 2026-11-02:** `--all --live` chạy GEARVN + Phong Vũ: 113 listing, 113 canonical, 46 review, 0 lỗi.
+  - **CellphoneS: CHƯA.** ToS tải động chưa đọc được nội dung → chưa thể đánh giá.
 
 ## Phase 8 — Hardening, security, performance, backup, deployment
 - **Mục tiêu:** chắc chắn hóa trước khi dùng lâu dài (deploy VPS cá nhân).

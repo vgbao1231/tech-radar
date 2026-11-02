@@ -1,9 +1,11 @@
 import { gearvnAdapter } from "./gearvn/index.js";
+import { phongvuAdapter } from "./phongvu/index.js";
 import type { SourceAdapter } from "./types.js";
 import { normalizeSourceUrl } from "./url.js";
 
 export * from "./types.js";
 export { gearvnAdapter, parseGearvnCategory, parseGearvnProduct } from "./gearvn/index.js";
+export { phongvuAdapter, parsePhongvuCategory, parsePhongvuProduct } from "./phongvu/index.js";
 export { normalizeSourceUrl } from "./url.js";
 
 /**
@@ -12,6 +14,7 @@ export { normalizeSourceUrl } from "./url.js";
  */
 export const adapters: Record<string, SourceAdapter> = {
   [gearvnAdapter.code]: gearvnAdapter,
+  [phongvuAdapter.code]: phongvuAdapter,
 };
 
 export function getAdapter(code: string): SourceAdapter {

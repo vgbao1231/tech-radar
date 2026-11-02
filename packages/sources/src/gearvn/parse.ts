@@ -1,57 +1,13 @@
 import * as cheerio from "cheerio";
 import { parseVndPrice } from "@tech-radar/core";
 import { ParseError, type ParseContext, type ScrapedListing } from "../types.js";
-
-const AVAILABILITY: Record<string, string> = {
-  "https://schema.org/InStock": "InStock",
-  "http://schema.org/InStock": "InStock",
-  "https://schema.org/OutOfStock": "OutOfStock",
-  "http://schema.org/OutOfStock": "OutOfStock",
-  "https://schema.org/PreOrder": "PreOrder",
-  "https://schema.org/SoldOut": "SoldOut",
-  "https://schema.org/Discontinued": "Discontinued",
-};
-
-function absoluteUrl(href: string, base: string): string {
-  try {
-    return new URL(href, base).toString();
-  } catch {
-    return href;
-  }
-}
-
-function textOf(value: unknown): string | null {
-  if (typeof value === "string" && value.trim().length > 0) return value.trim();
-  return null;
-}
-
-function readJsonLd($: cheerio.CheerioAPI): unknown[] {
-  const blocks: unknown[] = [];
-  $('script[type="application/ld+json"]').each((_, el) => {
-    const raw = $(el).contents().text();
-    if (!raw) return;
-    try {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) blocks.push(...parsed);
-      else blocks.push(parsed);
-    } catch {
-      // A malformed block must not abort parsing of the rest of the page.
-    }
-  });
-  return blocks;
-}
-
-function findProductJsonLd(blocks: unknown[]): Record<string, any> | null {
-  for (const block of blocks) {
-    if (!block || typeof block !== "object") continue;
-    const candidate = block as Record<string, any>;
-    const type = candidate["@type"];
-    if (type === "Product" || (Array.isArray(type) && type.includes("Product"))) {
-      return candidate;
-    }
-  }
-  return null;
-}
+import {
+  absoluteUrl,
+  findProductJsonLd,
+  readJsonLd,
+  SCHEMA_AVAILABILITY,
+  textOf,
+} from "../jsonld.js";
 
 /**
  * Parses a GEARVN category listing page (server-rendered product cards).
@@ -91,6 +47,7 @@ export function parseGearvnCategory(html: string, ctx: ParseContext): ScrapedLis
       priceOriginal: parseVndPrice(originalText),
       currency: "VND",
       stockStatus: null,
+      imageUrl: absoluteUrl($(el).find("img").first().attr("src") ?? "", ctx.url) || null,
       specs: specs.length > 0 ? { highlights: specs.join(" | ") } : {},
       rawPayload: {
         kind: "category_card",
@@ -119,7 +76,7 @@ export function parseGearvnProduct(html: string, ctx: ParseContext): ScrapedList
 
   const offers = Array.isArray(product.offers) ? product.offers[0] : product.offers;
   const availabilityUrl = textOf(offers?.availability);
-  const availability = availabilityUrl ? (AVAILABILITY[availabilityUrl] ?? availabilityUrl) : null;
+  const availability = availabilityUrl ? (SCHEMA_AVAILABILITY[availabilityUrl] ?? availabilityUrl) : null;
 
   const specs: Record<string, string> = {};
   if (Array.isArray(product.additionalProperty)) {
@@ -130,6 +87,8 @@ export function parseGearvnProduct(html: string, ctx: ParseContext): ScrapedList
     }
   }
 
+  const imageRaw = Array.isArray(product.image) ? product.image[0] : product.image;
+  const imageUrl = textOf(imageRaw) ? absoluteUrl(textOf(imageRaw)!, ctx.url) : null;
   const brand =
     typeof product.brand === "string" ? product.brand : textOf(product.brand?.name) ?? null;
   const price = typeof offers?.price === "number" ? offers.price : parseVndPrice(textOf(offers?.price));
@@ -152,6 +111,7 @@ export function parseGearvnProduct(html: string, ctx: ParseContext): ScrapedList
     priceOriginal: null,
     currency,
     stockStatus: availability,
+    imageUrl,
     specs,
     rawPayload: { kind: "product_jsonld", product },
   };

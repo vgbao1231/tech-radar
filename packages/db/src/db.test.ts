@@ -52,7 +52,7 @@ describe("seed sources", () => {
     expect(byCode).toEqual({
       cellphones: "investigated",
       gearvn: "approved_for_use",
-      phongvu: "blocked",
+      phongvu: "approved_for_use",
     });
   });
 

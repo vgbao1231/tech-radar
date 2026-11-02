@@ -2,7 +2,7 @@
 
 Trạng thái nguồn: `unknown` → `investigated` → `technically-tested` → `approved-for-use` | `blocked`.
 
-> **Ngày kiểm tra: 2026-11-01.** Phase 1 đã chạy khảo sát + POC nhỏ cho GEARVN (bằng chứng bên dưới). **Chưa nguồn nào `approved-for-use`.**
+> **Ngày kiểm tra: 2026-11-01 (GEARVN, ToS các nguồn); 2026-11-02 (POC Phong Vũ).** Phase 1/7 đã chạy khảo sát + POC nhỏ (bằng chứng bên dưới). **GEARVN và Phong Vũ đã `approved_for_use`** theo quyết định owner (cá nhân, phi thương mại).
 >
 > **Cảnh báo pháp lý:** robots.txt **không phải giấy phép pháp lý**. Việc được phép thu thập/tái sử dụng dữ liệu phụ thuộc điều khoản sử dụng (ToS) và pháp luật. Không suy ra quyền từ robots.txt.
 
@@ -10,7 +10,7 @@ Trạng thái nguồn: `unknown` → `investigated` → `technically-tested` →
 
 | Mục | Giá trị |
 |---|---|
-| Trạng thái | **`technically-tested`** (POC kỹ thuật) — **chưa** `approved-for-use` |
+| Trạng thái | **`approved_for_use`** — POC kỹ thuật đạt; owner duyệt dùng cá nhân phi thương mại |
 | Trang chủ | https://www.gearvn.com/ |
 | robots.txt | https://www.gearvn.com/robots.txt — đã tải 2026-11-01 |
 | Điều khoản | **https://gearvn.com/pages/dieu-khoan-dich-vu** — đã đọc 2026-11-01 |
@@ -29,13 +29,13 @@ Trạng thái nguồn: `unknown` → `investigated` → `technically-tested` →
 
 **Bằng chứng (fixture):** `tests/fixtures/sources/gearvn/` — `ban-phim-co.html`, `gaming-mouse.html`, `product-azoth-96-he-white.html`, `extracted-sample.json`, `manifest.json`.
 
-**Kết luận:** khả năng kỹ thuật **đã xác minh ở quy mô nhỏ**. Dùng lâu dài cần quyết định của owner về quyền sử dụng dữ liệu (ToS không nêu rõ).
+**Kết luận:** khả năng kỹ thuật **đã xác minh ở quy mô nhỏ**; owner đã duyệt dùng cá nhân phi thương mại (adapter + fixture đang dùng).
 
 ## Phong Vũ — `phongvu`
 
 | Mục | Giá trị |
 |---|---|
-| Trạng thái | **`investigated`** — **chưa** `technically-tested`, **chưa** `approved-for-use`; có **ràng buộc ToS** |
+| Trạng thái | **`approved_for_use`** — owner decision 2026-11-01: phi thương mại, cá nhân; ToS art. 14.2 chỉ hạn chế mục đích kinh doanh/thương mại |
 | Trang chủ | https://phongvu.vn/ |
 | robots.txt | https://phongvu.vn/robots.txt — đã tải 2026-11-01 |
 | Điều khoản | **https://help.phongvu.vn/chinh-sach-ban-hang/dieu-kien-giao-dich** — đã đọc 2026-11-01 |
@@ -46,9 +46,20 @@ Trạng thái nguồn: `unknown` → `investigated` → `technically-tested` →
 **ToS (Điều kiện giao dịch chung) — điểm quan trọng (Điều 14.2), trích nguyên văn:**
 > "Nội dung được đăng trên Website/ App Phong Vũ phục vụ cho mục đích tham khảo cá nhân của Khách Hàng. Khách Hàng không được tải về, sao chép, sử dụng, tái sản xuất hoặc tham khảo bất kỳ nội dung nào cho mục đích kinh doanh hoặc thương mại."
 
-Diễn giải: ToS cho phép **tham khảo cá nhân**, nhưng hạn chế tải về/sao chép/tái sử dụng **cho mục đích kinh doanh/thương mại**. Ứng dụng cá nhân phi thương mại có thể nằm trong "tham khảo cá nhân", **nhưng thu thập tự động quy mô lớn là mơ hồ về pháp lý** → **chưa thể coi là phù hợp**. Cần ý kiến pháp lý/quyết định owner trước khi thu thập tự động.
+Diễn giải: ToS cho phép **tham khảo cá nhân**, nhưng hạn chế tải về/sao chép/tái sử dụng **cho mục đích kinh doanh/thương mại**. Ứng dụng cá nhân phi thương mại nằm trong "tham khảo cá nhân"; owner đã quyết định phê duyệt dùng cá nhân phi thương mại với tần suất lịch sự (xem mục "Quyết định của người dùng" trong `STATUS.md`).
 
-**Kết luận:** **blocker pháp lý** — không thu thập tự động cho đến khi có quyết định rõ. Không chạy POC kỹ thuật ở giai đoạn này.
+**POC kỹ thuật (đã chạy 2026-11-02, quy mô nhỏ, tần suất thấp, chỉ trang công khai, không bypass):**
+- Đã tải 2 category page (`/c/ban-phim-gaming`, `/c/chuot-gaming`) + 1 product page. Tất cả HTTP 200 với UA bot mô tả (`TechRadarBot/0.1 ...`), **không bị chặn**; mỗi request cách nhau ≥ 2s.
+- Category page là **Next.js**: grid sản phẩm nằm trong `<script id="__NEXT_DATA__">` tại `props.pageProps.serverProducts` (40 sản phẩm/trang, 11 trang cho bàn phím). DOM product card được render client-side nên không parse HTML card.
+- Mỗi item có: `sku`, `name`, `imageUrl`, `price.latestPrice`, `price.supplierRetailPrice`, `stockQuantity`, `isPreOrder`, `brand.name`, `link.as.pathname`.
+- **Biến thể (màu/switch) là SKU khác nhau nhưng dùng chung một URL sản phẩm** (ví dụ AULA F75). Vì `product_listings` khóa theo `(source_id, source_url)`, adapter gom nhóm biến thể thành **một listing**: chọn biến thể rẻ nhất còn hàng làm giá đại diện, toàn bộ payload biến thể giữ trong `raw_payload`.
+- **Product detail** có **JSON-LD `Product`**: `name`, `image`, `brand.name`, `offers` (`price`, `priceCurrency`, `availability`), `sku`, `additionalProperty` (specs). **`mpn` không có**; **giá gốc (list price) không có trong JSON-LD**.
+- Lưu ý dữ liệu: một số chuỗi spec ở dạng Unicode NFD; adapter chuẩn hóa về NFC khi parse.
+- Đã trích được 35 listing bàn phím + 38 listing chuột (sau khi gom biến thể) từ 2 fixture category.
+
+**Bằng chứng (fixture):** `tests/fixtures/sources/phongvu/` — `ban-phim-gaming.html`, `chuot-gaming.html`, `product-aula-s500.html`, `manifest.json`.
+
+**Kết luận:** khả năng kỹ thuật **đã xác minh**; adapter `phongvuAdapter` đã hiện thực và test offline bằng fixture.
 
 ## CellphoneS — `cellphones`
 
@@ -72,11 +83,11 @@ Diễn giải: ToS cho phép **tham khảo cá nhân**, nhưng hạn chế tải
 
 | Nguồn | Trạng thái | robots | ToS | Đề xuất tiếp theo |
 |---|---|---|---|---|
-| GEARVN | **technically-tested** | cho phép crawl chung `/` | tìm thấy; **không nêu rõ** thu thập/tái sử dụng | Owner quyết định quyền dùng dữ liệu (ToS mơ hồ) |
-| Phong Vũ | investigated | cho phép category; cấm `/search?*` | tìm thấy; **hạn chế sao chép/thương mại** (Đ.14.2) | Blocker pháp lý; không auto-collect |
+| GEARVN | **approved_for_use** | cho phép crawl chung `/` | tìm thấy; **không nêu rõ** thu thập/tái sử dụng | Đang dùng (adapter + fixture). |
+| Phong Vũ | **approved_for_use** | cho phép category; cấm `/search?*` | ToS Đ.14.2 hạn chế mục đích thương mại; owner duyệt dùng cá nhân | Đang dùng (adapter + fixture). |
 | CellphoneS | investigated | hạn chế URL query | trang `/tos` có nhưng **chưa đọc được nội dung** | Đọc ToS thủ công trước |
 
-**Chưa nguồn nào `approved-for-use`.** Quyết định dùng nguồn thuộc về owner sau khi xem xét ToS/ý kiến pháp lý.
+Owner đã phê duyệt GEARVN và Phong Vũ cho mục đích cá nhân phi thương mại. CellphoneS **chưa** được duyệt.
 
 ## Nguyên tắc khi triển khai (Phase sau)
 

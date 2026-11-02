@@ -42,6 +42,7 @@ Canonical product/model.
 | `name` | text | NOT NULL | Canonical display name (from most trusted listing) |
 | `category` | text | NULL | Category |
 | `specs` | jsonb | default `{}` | Aggregated specs |
+| `image_url` | text | NULL | Representative product image (copied from the linked listing) |
 | `status` | enum | default `active` | `active` / `needs_review` / `merged` / `archived` |
 | `created_at` / `updated_at` | timestamptz | NOT NULL | |
 
@@ -68,6 +69,7 @@ A single store's product record (one listing).
 | `currency` | text | default `VND` | |
 | `stock_status` | text | NULL | Raw stock label |
 | `specs` | jsonb | default `{}` | Specs (raw or extracted) |
+| `image_url` | text | NULL | Product image URL from the store |
 | `raw_payload` | jsonb | NOT NULL | Full fetched raw data (provenance) |
 | `status` | enum | default `active` | `active` / `out_of_stock` / `discontinued` / `pending_review` / `archived` |
 | `first_seen_at` | timestamptz | NOT NULL | |

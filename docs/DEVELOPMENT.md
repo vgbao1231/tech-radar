@@ -22,7 +22,7 @@ tech-radar/
     worker/     # Node worker (polite ingestion, price history tracking, canonical linking)
   packages/
     core/       # Money parsing, Vietnamese text normalization, dedupe & scoring engine
-    sources/    # Source adapters (GEARVN adapter, cheerio parsers, URL normalizer)
+    sources/    # Source adapters (GEARVN + Phong Vũ, cheerio/JSON-LD parsers, URL normalizer)
     db/         # Drizzle schema (7 tables), migrations, seed, PGlite & Node-PG client
   docs/         # Documentation (Vietnamese for owner, English for agents)
   tests/fixtures/  # Saved HTML fixtures for offline parser/worker tests
@@ -33,15 +33,15 @@ tech-radar/
 | Command | Purpose | Verification status |
 |---|---|---|
 | `pnpm install` | Install monorepo dependencies | **Verified** |
-| `pnpm test` | Run all test suites across workspaces (50 tests) | **Verified (50/50 passed)** |
+| `pnpm test` | Run all test suites across workspaces (59 tests) | **Verified (59/59 passed)** |
 | `pnpm typecheck` | Strict TypeScript check across all packages | **Verified (0 errors)** |
 | `pnpm db:generate` | Generate Drizzle SQL migrations | **Verified** |
 | `pnpm db:migrate` | Apply migrations to database (PGlite or Postgres) | **Verified** |
 | `pnpm db:seed` | Upsert sources into database idempotently | **Verified** |
 | `pnpm dev:api` | Run Fastify API in development mode with `tsx watch` | **Verified** |
 | `pnpm dev:web` | Run React + Vite frontend dev server | **Verified** |
-| `pnpm --filter @tech-radar/web build` | Build Vite frontend for production | **Verified (dist created)** |
-| `pnpm --filter @tech-radar/worker start -- --live` | Run a single polite ingestion pass against live sources | **Verified (40 listings fetched & ingested)** |
+| `pnpm --filter @tech-radar/web build` | Build Vite frontend for production (alias: `pnpm build`) | **Verified (dist created)** |
+| `pnpm --filter @tech-radar/worker start -- --live [--source <code>] [--all]` | Run one polite ingestion pass against live source(s) | **Verified (2026-11-02: GEARVN + Phong Vũ, 113 listings)** |
 
 ## Database options
 

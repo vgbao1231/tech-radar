@@ -33,6 +33,6 @@ Stable guidance for every coding agent working in this repo. **Read before modif
 
 ## Current status (summary)
 
-- **Phase 0:** docs created; **ADR 0001 accepted** (stack settled). **No code, no commits, no features run yet.** Git is initialized but nothing is committed.
-- **Phase 1:** survey/POC design at [docs/PHASE_1_PLAN.md](docs/PHASE_1_PLAN.md), **awaiting owner approval**; POC not run yet.
+- **Phases 0–6:** done (ADR 0001 accepted, Postgres schema + migrations 0000–0002, GEARVN + Phong Vũ adapters, worker pipeline, API, SPA).
+- **Phase 7:** in progress — Phong Vũ adapter implemented and tested offline; no live Phong Vũ run yet; CellphoneS still blocked on ToS review.
 - Full details in [docs/STATUS.md](docs/STATUS.md) and [docs/ROADMAP.md](docs/ROADMAP.md) (do not duplicate the roadmap here).

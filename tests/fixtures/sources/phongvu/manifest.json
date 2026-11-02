@@ -1,0 +1,33 @@
+{
+  "source": "phongvu",
+  "base_url": "https://phongvu.vn",
+  "fetched_at": "2026-11-02",
+  "user_agent": "TechRadarBot/0.1 (personal, non-commercial price tracker)",
+  "note": "Phase 7 small-scale POC. Public pages only, 3 requests with >=2s delay, no bypass. Raw HTML saved for offline parsing tests. Do not regenerate without intent.",
+  "fixtures": [
+    {
+      "file": "ban-phim-gaming.html",
+      "url": "https://phongvu.vn/c/ban-phim-gaming",
+      "type": "category",
+      "http_status": 200,
+      "bytes": 1440663,
+      "notes": "Next.js page: product grid lives in <script id=\"__NEXT_DATA__\"> at props.pageProps.serverProducts (40 items, 11 pages total). DOM cards are client-rendered."
+    },
+    {
+      "file": "chuot-gaming.html",
+      "url": "https://phongvu.vn/c/chuot-gaming",
+      "type": "category",
+      "http_status": 200,
+      "bytes": 1434003,
+      "notes": "Same page shape as the keyboard category."
+    },
+    {
+      "file": "product-aula-s500.html",
+      "url": "https://phongvu.vn/ban-phim-co-gaming-co-day-aula-s500-red-switch-phien-ban-xam-den-vang--s261001074",
+      "type": "product",
+      "http_status": 200,
+      "bytes": 1017372,
+      "notes": "Product detail. JSON-LD Product: name, image, brand, offers(price/priceCurrency/availability), sku, additionalProperty (specs). mpn absent; list price not exposed in JSON-LD."
+    }
+  ]
+}

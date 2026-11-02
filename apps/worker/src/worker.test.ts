@@ -4,7 +4,7 @@ import type { AddressInfo } from "node:net";
 import { createTestDb } from "@tech-radar/db/testing";
 import type { DbHandle } from "@tech-radar/db";
 import { seedSources, priceHistory, productListings, sources, scrapeRuns } from "@tech-radar/db";
-import { gearvnAdapter, type SourceAdapter } from "@tech-radar/sources";
+import { gearvnAdapter, phongvuAdapter, type SourceAdapter } from "@tech-radar/sources";
 import { and, eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { runSource } from "./run.js";
@@ -12,9 +12,14 @@ import { runSource } from "./run.js";
 const fixture = (name: string): string =>
   readFileSync(new URL(`../../../tests/fixtures/sources/gearvn/${name}`, import.meta.url), "utf8");
 
+const phongvuFixture = (name: string): string =>
+  readFileSync(new URL(`../../../tests/fixtures/sources/phongvu/${name}`, import.meta.url), "utf8");
+
 const keyboardHtml = fixture("ban-phim-co.html");
 const mouseHtml = fixture("gaming-mouse.html");
 const productHtml = fixture("product-azoth-96-he-white.html");
+const phongvuKeyboardHtml = phongvuFixture("ban-phim-gaming.html");
+const phongvuMouseHtml = phongvuFixture("chuot-gaming.html");
 
 let server: Server;
 let baseUrl: string;
@@ -194,5 +199,40 @@ describe("runSource against fixture server (offline)", () => {
     expect(result.status).toBe("failed");
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]!.message).toContain("404");
+  });
+});
+
+describe("Phong Vu adapter against fixture server (offline)", () => {
+  it("ingests both categories from the Next.js page data", async () => {
+    routes.set("/c/ban-phim-gaming", { status: 200, body: phongvuKeyboardHtml });
+    routes.set("/c/chuot-gaming", { status: 200, body: phongvuMouseHtml });
+
+    const result = await runSource({
+      db: handle.db,
+      adapter: { ...phongvuAdapter, baseUrl, minDelayMs: 1 },
+      now: () => new Date("2026-11-05T10:00:00Z"),
+    });
+
+    expect(result).toMatchObject({
+      status: "success",
+      listingsFound: 73,
+      listingsNew: 73,
+      historyAppended: 73,
+      errors: [],
+    });
+
+    const [phongvu] = await handle.db.select().from(sources).where(eq(sources.code, "phongvu"));
+    const [s500] = await handle.db
+      .select()
+      .from(productListings)
+      .where(eq(productListings.sourceUrl, `${baseUrl}/ban-phim-co-gaming-co-day-aula-s500-red-switch-phien-ban-xam-den-vang--s261001074`));
+    expect(s500).toMatchObject({
+      sourceId: phongvu!.id,
+      sku: "261001074",
+      brand: "Aula",
+      stockStatus: "InStock",
+    });
+    expect(s500!.priceCurrent).toBe("560000.00");
+    expect(s500!.priceOriginal).toBe("899000.00");
   });
 });
